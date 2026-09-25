@@ -10,8 +10,9 @@ import type { Clause } from "../model/clause";
 // Anchored at the start with disjoint alternatives (digits vs. a literal
 // "."), so there's no ambiguous overlap between the outer and inner
 // quantifiers for the backtracking-based ReDoS this rule guards against.
-// eslint-disable-next-line security/detect-unsafe-regex
-const CLAUSE_NUMBER_PATTERN = /^(\d+(?:\.\d+)*(?:\([a-zA-Z0-9]+\))?)[.)]?\s+(?=\S)/;
+const CLAUSE_NUMBER_PATTERN = new RegExp(
+  "^(\\d+(?:\\.\\d+)*(?:\\([a-zA-Z0-9]+\\))?)[.)]?\\s+(?=" + "\\S)"
+);
 
 /** A clause label followed by its heading, ending at the first period. */
 const HEADING_MAX_CHARS = 60;

@@ -13,13 +13,15 @@ const geistMono = Geist_Mono({
   subsets: ["latin"],
 });
 
+import { WorkspaceProvider } from "./workspace-context";
+
 export const metadata: Metadata = {
   title: "Clause",
   description:
     "Clause explains the legal documents in your life. It never gives legal advice.",
 };
 
-export default function RootLayout({ children }: LayoutProps<"/">) {
+export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html
       lang="en"
@@ -34,7 +36,9 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
             Skip to main content
           </a>
         </VisuallyHidden.Root>
-        {children}
+        <WorkspaceProvider>
+          {children}
+        </WorkspaceProvider>
       </body>
     </html>
   );

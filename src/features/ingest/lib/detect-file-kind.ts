@@ -7,8 +7,7 @@ function startsWith(bytes: Uint8Array, magic: number[]): boolean {
   if (bytes.length < magic.length) return false;
   // `bytes` is the raw file buffer being sniffed, not a user-keyed
   // object; indexing it by position is exactly `Uint8Array`'s contract.
-  // eslint-disable-next-line security/detect-object-injection
-  return magic.every((byte, i) => bytes[i] === byte);
+  return magic.every((byte, i) => bytes.at(i) === byte);
 }
 
 /**

@@ -18,7 +18,7 @@ import type { NextRequest } from "next/server";
  * Gating on `NODE_ENV` (never on a request header, which a client could
  * spoof) keeps the shipped policy strict while unblocking local dev.
  */
-export function middleware(request: NextRequest): NextResponse {
+export function proxy(request: NextRequest): NextResponse {
   const nonce = crypto.randomUUID();
   const isDev = process.env.NODE_ENV === "development";
 

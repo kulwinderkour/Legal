@@ -1,1 +1,1 @@
-export {};
+export { SafetyRail } from "./ui/SafetyRail";
