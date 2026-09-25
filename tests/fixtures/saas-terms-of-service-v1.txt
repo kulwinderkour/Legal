@@ -1,0 +1,29 @@
+TERMS OF SERVICE — CloudLedger (v1)
+
+These Terms of Service ("Terms") govern access to and use of the CloudLedger software-as-a-service platform ("Service") operated by Ledgerworks, Inc. ("Company").
+
+1. Account Registration. You must provide accurate and complete information when creating an account and are responsible for maintaining the confidentiality of your login credentials.
+
+2. Subscription Fees. Use of the Service requires payment of the subscription fee specified at signup, billed monthly in advance. Fees are non-refundable except as required by law.
+
+3. Free Trial. New accounts receive a fourteen (14) day free trial. Unless cancelled before the trial ends, the account automatically converts to a paid subscription and the payment method on file is charged.
+
+4. Data Ownership. As between you and the Company, you retain all rights to the data you upload to the Service ("Customer Data").
+
+5. Data Use by Company. The Company may access Customer Data solely to provide, maintain, and improve the Service, and shall not sell Customer Data to third parties.
+
+6. Termination for Convenience. Either party may terminate this Agreement at any time by providing thirty (30) days' written notice.
+
+7. Termination for Breach. The Company may suspend or terminate your account immediately, without notice, if it determines in its sole discretion that you have violated these Terms.
+
+8. Limitation of Liability. The Company's total liability arising out of or related to these Terms shall not exceed the amount paid by you in the twelve (12) months preceding the claim.
+
+9. Data Retention on Termination. Upon termination, Customer Data shall be retained for thirty (30) days to permit export, after which it will be permanently deleted.
+
+10. Service Level. The Company targets 99.5% uptime, measured monthly, excluding scheduled maintenance windows announced at least twenty-four (24) hours in advance.
+
+11. Modifications to Terms. The Company may modify these Terms at any time by posting updated Terms on its website. Continued use of the Service after such changes constitutes acceptance of the modified Terms.
+
+12. Governing Law and Venue. These Terms are governed by the laws of the State of Delaware, and any disputes shall be resolved exclusively in the state or federal courts located in Delaware.
+
+13. Boilerplate. Section headings are for convenience only and shall not affect the interpretation of these Terms. If any provision is held unenforceable, the remaining provisions shall continue in full force and effect.
