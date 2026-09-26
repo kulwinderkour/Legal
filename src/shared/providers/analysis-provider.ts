@@ -1,4 +1,5 @@
-import type { Clause } from "@/features/clauses/model/clause";
+import type { Clause } from "@/features/clauses";
+export type { Clause };
 
 export interface Explanation {
   plainLanguage: string;

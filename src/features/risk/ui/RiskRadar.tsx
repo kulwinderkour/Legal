@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import type { Clause } from "@/features/clauses/model/clause";
+import type { Clause } from "@/shared/providers/analysis-provider";
 import type { AnalysisProvider, RiskAssessment } from "@/shared/providers/analysis-provider";
 import * as Tooltip from "@radix-ui/react-tooltip";
 
@@ -17,6 +17,9 @@ export function RiskRadar({ clauses, provider, onNavigateToClause }: { clauses: 
   const mediumRisks = clauses.filter(c => assessments[c.id]?.level === "Medium");
   const lowRisks = clauses.filter(c => assessments[c.id]?.level === "Low");
 
+  const noRisksFound = highRisks.length === 0 && mediumRisks.length === 0 && lowRisks.length === 0;
+  const isLoading = Object.keys(assessments).length === 0;
+
   return (
     <div className="h-full overflow-y-auto p-8">
       <div className="max-w-4xl mx-auto space-y-12 pb-32">
@@ -24,7 +27,9 @@ export function RiskRadar({ clauses, provider, onNavigateToClause }: { clauses: 
           <h2 className="text-3xl font-serif text-neutral-900 dark:text-white">Risk Radar</h2>
           <p className="text-neutral-600 dark:text-neutral-400">Potentially important clauses categorized by their impact. Clause does not provide legal advice.</p>
         </div>
-        <div className="space-y-8">
+        <div className="space-y-8" aria-live="polite" aria-label="Risk assessment results">
+          {isLoading && <p className="text-neutral-500" role="status">Analysing clauses…</p>}
+          {!isLoading && noRisksFound && <p className="text-neutral-500">No significant risks were identified in this document.</p>}
           <RiskSection title="HIGH / IMPORTANT" clauses={highRisks} assessments={assessments} color="red" onNavigate={onNavigateToClause} />
           <RiskSection title="MEDIUM" clauses={mediumRisks} assessments={assessments} color="amber" onNavigate={onNavigateToClause} />
           <RiskSection title="LOW" clauses={lowRisks} assessments={assessments} color="blue" onNavigate={onNavigateToClause} />
@@ -60,7 +65,11 @@ function RiskItem({ clause, assessment, bgClass, onNavigate }: { clause: Clause,
           <div className="text-sm font-medium text-neutral-500">Clause {clause.index + 1}</div>
           <h4 className="text-lg font-medium text-neutral-900 dark:text-white">{clause.text.split("\n")[0]?.replace(/^\d+\.\s*/, "")}</h4>
         </div>
-        <button onClick={() => { onNavigate(clause.id); }} className="px-4 py-2 bg-white dark:bg-neutral-800 text-sm font-medium rounded-lg shadow-sm border border-neutral-200 dark:border-neutral-700 hover:bg-neutral-50 transition-colors">
+        <button
+          onClick={() => { onNavigate(clause.id); }}
+          aria-label={`View clause ${String(clause.index + 1)} in explorer`}
+          className="px-4 py-2 bg-white dark:bg-neutral-800 text-sm font-medium rounded-lg shadow-sm border border-neutral-200 dark:border-neutral-700 hover:bg-neutral-50 transition-colors"
+        >
           View clause
         </button>
       </div>

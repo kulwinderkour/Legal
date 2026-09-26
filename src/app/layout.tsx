@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
-import * as VisuallyHidden from "@radix-ui/react-visually-hidden";
 import "./globals.css";
+import { WorkspaceProvider } from "./workspace-context";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -12,8 +12,6 @@ const geistMono = Geist_Mono({
   variable: "--font-geist-mono",
   subsets: ["latin"],
 });
-
-import { WorkspaceProvider } from "./workspace-context";
 
 export const metadata: Metadata = {
   title: "Clause",
@@ -28,14 +26,12 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
     >
       <body className="min-h-full flex flex-col">
-        <VisuallyHidden.Root asChild>
-          <a
-            href="#main-content"
-            className="focus:not-sr-only focus:absolute focus:z-50 focus:p-4 focus:bg-white focus:text-black"
-          >
-            Skip to main content
-          </a>
-        </VisuallyHidden.Root>
+        <a
+          href="#main-content"
+          className="sr-only focus:not-sr-only focus:absolute focus:z-50 focus:p-4 focus:bg-white focus:text-black"
+        >
+          Skip to main content
+        </a>
         <WorkspaceProvider>
           {children}
         </WorkspaceProvider>

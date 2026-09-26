@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import type { Clause } from "@/features/clauses/model/clause";
+import type { Clause } from "@/shared/providers/analysis-provider";
 
 export function CompareView({ clauses: _clauses }: { clauses: Clause[] }) {
   const [showCompare, setShowCompare] = useState(false);

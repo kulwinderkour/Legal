@@ -1,94 +1,103 @@
-import type { AnalysisProvider, Explanation, RiskAssessment, QAResponse, ActionKit } from "./analysis-provider";
-import type { Clause } from "@/features/clauses/model/clause";
+import type { AnalysisProvider, Explanation, RiskAssessment, QAResponse, ActionKit, Clause } from "./analysis-provider";
 
-// eslint-disable-next-line import/no-restricted-paths
+// ---------- Helpers ----------
 
-const explanations = [
-  { p: "commence on the 1st day", a: "Your rental agreement lasts for exactly 1 year starting from the 1st of next month." },
-  { p: "monthly rent of", a: "You must pay your rent by the 5th of every month." },
-  { p: "security deposit", a: "You must pay a security deposit before moving in. It will be returned when you leave, minus any repair costs for damage you caused." },
-  { p: "late payment", a: "If you don't pay rent by the 5th, you will be charged an extra ₹1,000 for every week it's late." },
-  { p: "automatic renewal", a: "This agreement will automatically renew for another year unless you or the landlord give written notice to cancel it before the current term ends." },
-  { p: "terminate this agreement prior", a: "You can end the agreement early by giving written notice to the landlord." },
-  { p: "notice address", a: "All official notices must be sent to the registered address via post or email." },
-  { p: "maintenance responsibilities", a: "You must keep the place clean and do minor repairs. The landlord will handle major structural fixes." },
-  { p: "liability", a: "The landlord is not responsible if your personal belongings are damaged or stolen. You should get renter's insurance." },
-  { p: "dispute resolution", a: "If there's a disagreement, you must try mediation first before going to court." }
-];
+function firstSentences(text: string, n = 2): string {
+  return (text.match(/[^.!?]{10,}[.!?]/g) ?? [text]).slice(0, n).join(" ").trim();
+}
+
+function detectClauseType(lower: string): string {
+  if (lower.includes("payment") || lower.includes("fee") || lower.includes("invoice") || lower.includes("cost")) return "payment terms";
+  if (lower.includes("terminat") || lower.includes("cancel") || lower.includes("end the") || lower.includes("expire")) return "termination conditions";
+  if (lower.includes("liabilit") || lower.includes("indemnif") || lower.includes("responsib")) return "liability and responsibility";
+  if (lower.includes("confiden") || lower.includes("disclos") || lower.includes("secret") || lower.includes("proprietary")) return "confidentiality obligations";
+  if (lower.includes("intellectu") || lower.includes("copyright") || lower.includes("patent") || lower.includes("trademark")) return "intellectual property rights";
+  if (lower.includes("govern") || lower.includes("jurisdiction") || lower.includes("law of")) return "governing law and jurisdiction";
+  if (lower.includes("dispute") || lower.includes("arbitrat") || lower.includes("mediat")) return "dispute resolution";
+  if (lower.includes("warrant") || lower.includes("represent") || lower.includes("guarant")) return "warranties and representations";
+  if (lower.includes("deliver") || lower.includes("service") || lower.includes("perform")) return "service delivery obligations";
+  if (lower.includes("renewal") || lower.includes("extend") || lower.includes("automat")) return "renewal and extension terms";
+  if (lower.includes("notice") || lower.includes("communicat") || lower.includes("notify")) return "notice requirements";
+  if (lower.includes("deposit") || lower.includes("security") || lower.includes("collateral")) return "security and deposit terms";
+  return "general contractual terms";
+}
+
+function detectRisk(lower: string): { level: "High" | "Medium" | "Low" | null; reason: string | null } {
+  const high = ["penalt", "forfeit", "void", "breach", "indemnif", "waiv", "irrevoc", "unconditional", "in perpetuity", "unlimited liabilit", "personally liable"];
+  const medium = ["terminat", "renewal", "automatic", "payment", "late", "notice", "condition", "restrict", "shall not", "must not"];
+  if (high.some(k => lower.includes(k))) return { level: "High", reason: "This clause may impose significant financial or legal obligations, penalties, or limitations on your rights." };
+  if (medium.some(k => lower.includes(k))) return { level: "Medium", reason: "This clause contains conditions or requirements that deserve careful attention before signing." };
+  return { level: null, reason: null };
+}
+
+function searchClauses(clauses: Clause[], keywords: string[]): Clause | undefined {
+  return clauses.find(c => keywords.some(k => c.text.toLowerCase().includes(k)));
+}
+
+// ---------- Provider ----------
 
 export class LocalProvider implements AnalysisProvider {
   explainClause(clause: Clause): Promise<Explanation> {
-    const text = clause.text.toLowerCase();
-    const match = explanations.find(e => text.includes(e.p));
-    return Promise.resolve({ plainLanguage: match ? match.a : "This clause defines specific terms of the agreement." });
+    const lower = clause.text.toLowerCase();
+    const type = detectClauseType(lower);
+    const summary = firstSentences(clause.text, 2);
+    const wordCount = clause.text.split(/\s+/).length;
+    return Promise.resolve({
+      plainLanguage: `This clause (${wordCount} words) covers ${type}. In plain terms: ${summary || clause.text.substring(0, 200)}`,
+    });
   }
 
   assessRisk(clause: Clause): Promise<RiskAssessment | null> {
-    const text = clause.text.toLowerCase();
-    if (text.includes("automatic renewal")) return Promise.resolve({ level: "High", reason: "The agreement automatically renews unless notice is provided before expiration." });
-    if (text.includes("late payment")) return Promise.resolve({ level: "Medium", reason: "Additional charges may apply when rent is paid late." });
-    if (text.includes("notice address")) return Promise.resolve({ level: "Low", reason: "The agreement specifies where written notices must be sent." });
-    if (text.includes("termination")) return Promise.resolve({ level: "High", reason: "Termination requires advance written notice, which you must track." });
-    return Promise.resolve(null);
+    const { level, reason } = detectRisk(clause.text.toLowerCase());
+    if (!level || !reason) return Promise.resolve(null);
+    return Promise.resolve({ level, reason });
   }
 
   askQuestion(clauses: Clause[], question: string): Promise<QAResponse> {
     const q = question.toLowerCase();
-    if (q.includes("should i sign") || q.includes("should i sue") || q.includes("will i win") || q.includes("legal action")) {
+    const legalPhrases = ["should i sign", "should i sue", "will i win", "legal action", "am i liable", "is this legal"];
+    if (legalPhrases.some(p => q.includes(p))) {
       return Promise.resolve({ answer: null, citationClauseId: null, isLegalAdvice: true });
     }
-    return Promise.resolve(this.findAnswer(clauses, q));
-  }
 
-  private findAnswer(clauses: Clause[], q: string): QAResponse {
-    const findQ = (str: string) => clauses.find(c => c.text.toLowerCase().includes(str));
-    
-    if (q.includes("monthly rent") || q.includes("how much is rent")) {
-      const c = findQ("monthly rent of");
-      if (c) return { answer: c.text.includes("28,000") ? "The monthly rent is ₹28,000, due by the 5th of each month." : "The monthly rent is ₹25,000, due by the 5th of each month.", citationClauseId: c.id, isLegalAdvice: false };
-    } 
-    
-    if (q.includes("notice period") || q.includes("terminate") || q.includes("end the agreement")) {
-      const c = findQ("termination");
-      if (c) return { answer: c.text.includes("90 days") ? "You must provide 90 days' written notice before terminating the agreement." : "You must provide 60 days' written notice before terminating the agreement.", citationClauseId: c.id, isLegalAdvice: false };
-    } 
-    
-    if (q.includes("automatically renewed") || q.includes("renewal")) {
-      const c = findQ("automatic renewal");
-      if (c) return { answer: "Yes, the agreement automatically renews for another 12-month period unless written notice is provided before expiration.", citationClauseId: c.id, isLegalAdvice: false };
-    } 
-    
-    if (q.includes("late")) {
-      const c = findQ("late payment");
-      if (c) return { answer: "If rent is not paid by the 5th of the month, an additional charge of ₹1,000 per week will apply.", citationClauseId: c.id, isLegalAdvice: false };
-    } 
-    
-    if (q.includes("deposit")) {
-      const c = findQ("security deposit");
-      if (c) return { answer: c.text.includes("56,000") ? "The security deposit is ₹56,000, payable prior to moving in." : "The security deposit is ₹50,000, payable prior to moving in.", citationClauseId: c.id, isLegalAdvice: false };
+    // Extract keywords from the question and search clause text
+    const stopWords = new Set(["what", "is", "the", "a", "an", "are", "does", "how", "when", "where", "who", "which", "do", "i", "can"]);
+    const keywords = q.split(/\W+/).filter(w => w.length > 3 && !stopWords.has(w));
+
+    const match = keywords.length > 0 ? searchClauses(clauses, keywords) : undefined;
+    if (match) {
+      const answer = firstSentences(match.text, 2);
+      return Promise.resolve({ answer: answer || match.text.substring(0, 300), citationClauseId: match.id, isLegalAdvice: false });
     }
-    return { answer: null, citationClauseId: null, isLegalAdvice: false };
+    return Promise.resolve({ answer: null, citationClauseId: null, isLegalAdvice: false });
   }
 
   generateActionKit(clauses: Clause[]): Promise<ActionKit> {
-    const isRenewal = clauses.some(c => c.text.includes("28,000"));
-    const rent = isRenewal ? "₹28,000" : "₹25,000";
-    const notice = isRenewal ? "90 days'" : "60 days'";
+    // Derive summary from document content
+    const totalWords = clauses.reduce((s, c) => s + c.text.split(/\s+/).length, 0);
+    const types = [...new Set(clauses.map(c => detectClauseType(c.text.toLowerCase())))].slice(0, 4);
+
+    const highRisk = clauses.filter(c => detectRisk(c.text.toLowerCase()).level === "High");
+    const obligations = clauses
+      .filter(c => /shall|must|required to|agrees to|obligated/i.test(c.text))
+      .slice(0, 4)
+      .map(c => firstSentences(c.text, 1) || c.text.substring(0, 120));
+
+    const importantClauses = highRisk
+      .slice(0, 4)
+      .map(c => detectClauseType(c.text.toLowerCase()).replace(/^./, s => s.toUpperCase()));
 
     return Promise.resolve({
-      summary: "This is a Residential Rental Agreement for a 12-month term. It outlines rent, deposit, maintenance, and termination conditions.",
-      obligations: [
-        `Pay ${rent} monthly rent by the 5th of each month`,
-        "Maintain the property according to the agreement",
-        `Provide ${notice} notice before termination`,
-        "Pay applicable late charges if rent is delayed"
-      ],
-      importantClauses: ["Automatic Renewal", "Termination", "Late Payment"],
+      summary: `This document contains ${clauses.length} clauses covering approximately ${totalWords} words. Key areas include: ${types.join(", ")}.`,
+      obligations: obligations.length > 0 ? obligations : ["Review all clause obligations carefully before signing"],
+      importantClauses: importantClauses.length > 0 ? importantClauses : ["Review all clauses carefully"],
       lawyerQuestions: [
-        "How does the automatic renewal clause affect termination?",
-        "What happens if I terminate before the agreement expires?",
-        "How are late-payment charges calculated and enforced?"
-      ]
+        "What are my key obligations under this agreement?",
+        "What happens if either party breaches the terms?",
+        "Can I terminate this agreement early, and what are the consequences?",
+        "Are there any clauses that limit my legal rights?",
+        "What jurisdiction and law governs any disputes?",
+      ],
     });
   }
 }

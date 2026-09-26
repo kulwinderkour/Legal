@@ -16,7 +16,7 @@ const featureNames = ["ingest", "clauses", "risk", "compare", "qa", "actions", "
 const featureBoundaryRules = featureNames.map((name) => ({
   target: `./src/features/!(${name})/**/*`,
   from: `./src/features/${name}/**/*`,
-  except: [`./src/features/${name}/index.ts`, `./src/features/${name}/index.tsx`],
+  except: [`./src/features/${name}/index.*`],
   message: `Import from "@/features/${name}" (its public index), not a deep path into the feature.`,
 }));
 
