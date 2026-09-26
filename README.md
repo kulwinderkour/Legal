@@ -12,15 +12,16 @@ Every answer is grounded strictly in the uploaded document. If Clause cannot fin
 
 **Clause uses OpenAI GPT-4o Mini** for all intelligent features via the `openai` SDK. All AI calls are server-side only (in `/src/app/api/analyze/route.ts`) — the API key is never exposed to the browser.
 
-### Where Gemini AI is used
+### Where GenAI is used
 
-| Feature | AI Operation | What Gemini Does |
+| Feature | AI Operation | What GenAI Does |
 |---|---|---|
-| **Clause Explorer** | `op: "explain"` | Converts dense legal text into plain-language explanations (2–3 sentences per clause) |
-| **Risk Radar** | `op: "risk"` | Classifies each clause as High / Medium / Low risk with a specific reason grounded in the text |
-| **Ask the Document** | `op: "ask"` | Answers natural-language questions using only the document's text; returns a cited clause ID |
-| **Action Kit** | `op: "actionkit"` | Generates a full action kit: document summary, obligations checklist, and lawyer questions |
-| **Safety Rail** | Built into `op: "ask"` | Detects when a question seeks legal advice (not document info) and refuses appropriately |
+| **Clause Explorer** | `op: "explain"` | Converts dense legal text into plain-language explanations, practical impact ("Why it matters"), category tags, and clause-specific lawyer questions |
+| **Risk Radar & Inconsistencies** | `op: "risk"`, `op: "inconsistencies"` | Classifies clauses as High / Medium / Low concern with verbatim evidence; detects contradictory notice windows, liability mismatches, and ambiguous terms |
+| **Ask the Document** | `op: "ask"` | Answers natural-language questions grounded strictly in document text; returns verbatim quotes, uncertainty notes, and suggested follow-ups |
+| **Document Comparison** | `op: "compare"` | Dimension-by-dimension comparison between two documents/versions, material differences list, and obligation/risk shift analysis |
+| **Action Kit & Decision Advisor** | `op: "actionkit"` | Structured metadata, interactive obligations checklist, rights tracker, negotiation redline suggestions, and lawyer consultation packet |
+| **Safety Rail** | Built into `op: "ask"` | Detects legal advice questions (strategy, enforceability, litigation probability) and routes user to professional counsel |
 
 ### AI Architecture
 
@@ -37,16 +38,18 @@ The app probes `/api/analyze` on startup. If the server returns HTTP 200 (API ke
 
 ---
 
-## Features
+## Features Matrix
 
-| Problem | Feature | GenAI Involved |
+| Problem Statement Use Case | Solution Feature | Status |
 |---|---|---|
-| "I don't understand this clause" | **Clause Explorer** — side-by-side original + plain-language, bidirectionally linked | ✅ Gemini explains each clause |
-| "What are my risks?" | **Risk Radar** — every clause classified High/Medium/Low risk with AI reasoning | ✅ Gemini assesses each clause |
-| "Ask a question about my document" | **Ask the Document** — natural language Q&A grounded strictly in document text | ✅ Gemini answers with citation |
-| "What do I need to do?" | **Action Kit** — AI-generated summary, obligations checklist, lawyer question sheet | ✅ Gemini generates full kit |
-| "Should I sue?" / legal advice requests | **Safety Rail** — AI detects and refuses, routes to lawyer | ✅ Gemini detects intent |
-| "Compare two versions" | **Compare** — clause-level diff viewer | 🔄 Coming soon |
+| **1. Simplifying complex legal documents** | **Clause Explorer** — Side-by-side original + plain-language meanings, "Why it matters", and category filters | ✅ Fully Live |
+| **2. Comparing contracts, agreements, or policies** | **Compare Mode** — Upload 2nd PDF/TXT or paste text; dimension comparison table (Financials, Duration, Liabilities) & material differences | ✅ Fully Live |
+| **3. Highlighting important clauses, obligations, risks, or inconsistencies** | **Risk Radar & Inconsistencies Engine** — High/Medium/Low concerns with evidence quotes + detected internal contract contradictions | ✅ Fully Live |
+| **4. Answering questions based on provided legal documents** | **Ask the Document** — Grounded Q&A with exact clause citations, uncertainty boundary notes, and dynamic follow-up suggestions | ✅ Fully Live |
+| **5. Helping users understand their options and potential next steps** | **Options & Next Steps Navigator** — Specific negotiation redline language, pre-signing inquiries, safeguards, and 4-step action roadmap | ✅ Fully Live |
+| **6. Generating summaries, checklists, or other actionable outputs** | **Interactive Action Kit** — Executive summary, interactive pre-signing checklist with progress tracking, and rights tracker | ✅ Fully Live |
+| **7. Helping users prepare information or questions for a legal professional** | **Consultation Dossier** — Curated lawyer questions, structured briefing packet, and one-click clipboard copy / export print | ✅ Fully Live |
+| **8. Responsible AI & Legal Disclaimers** | **Safety Rail** — Detects legal advice prompts, calibrates language ("document states" vs legal verdict), and disclaims legal counsel | ✅ Fully Live |
 
 ---
 
@@ -114,13 +117,16 @@ The API key is **server-side only** — it is read exclusively in `src/app/api/a
 
 ---
 
-## How Problem Statement Alignment Works
+## 🏆 Problem Statement Alignment (100% Comprehensive Coverage)
 
-This project directly addresses the challenge brief:
+This project achieves complete alignment with the **AI for Legal Assistance & Access** challenge brief:
 
-- ✅ **Smart, dynamic assistant** — Gemini 2.0 Flash adapts to any legal document type (rental, employment, NDA, loan, insurance)
-- ✅ **Logical decision making based on user context** — answers are grounded in the specific document uploaded; legal advice questions are detected and refused
-- ✅ **Practical and real-world usability** — upload any PDF/TXT legal document and get instant plain-language analysis
-- ✅ **Clean and maintainable code** — feature-slice architecture, strict TypeScript, 95+ ESLint score, zero lint warnings
+- 🎯 **1. Simplifying Complex Legal Documents**: Clause Explorer translates clauses into plain English, provides practical significance ("Why it matters"), category tags, and lawyer inquiry chips.
+- 🎯 **2. Comparing Contracts, Agreements, or Policies**: Dedicated multi-document comparison engine supporting PDF/TXT uploads or text pasting, with side-by-side dimension tables, material differences, and obligation/risk shift analysis.
+- 🎯 **3. Highlighting Important Clauses, Obligations, Risks, or Inconsistencies**: Dual-engine Risk Radar classifies High/Medium/Low concerns with verbatim evidence, plus an Inconsistencies detector for contradictory notice windows, conflicting liability caps, and ambiguous terms.
+- 🎯 **4. Answering Questions Based on Provided Legal Documents**: Grounded Q&A with exact clause citations, uncertainty boundary notes, dynamic follow-up suggestions, and calibrated confidence.
+- 🎯 **5. Helping Users Understand Their Options & Potential Next Steps**: Practical redline proposals with recommended contract language, pre-signing written inquiries, operational safeguards, and an interactive 4-step action roadmap.
+- 🎯 **6. Generating Summaries, Checklists, or Other Actionable Outputs**: Executive summaries, interactive pre-signing checklist with progress tracking, and rights tracker.
+- 🎯 **7. Preparing Information or Questions for a Legal Professional**: Curated questions for counsel, structured briefing packet, and one-click printable / clipboard Consultation Dossier.
+- 🎯 **8. Responsible AI & Guardrails**: Automatic detection of legal advice prompts, calibrated informational language ("the document states..." vs legal certainty), and prominent disclaimers throughout.
 
-> Clause was built for the challenge vertical: **Legal Document Intelligence** — an area where AI can dramatically improve access to information for people who cannot afford a lawyer.

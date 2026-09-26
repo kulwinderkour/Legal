@@ -57,29 +57,97 @@ function AiBanner({ isAiEnabled }: { isAiEnabled: boolean }) {
   );
 }
 
-function OverviewPanel({ clauses, importantCount, obligationCount, statsLoaded, isAiEnabled, onNavigate }: {
-  clauses: Clause[]; importantCount: number; obligationCount: number; statsLoaded: boolean; isAiEnabled: boolean; onNavigate: (tab: TabId) => void;
+function OverviewPanel({
+  clauses,
+  importantCount,
+  obligationCount,
+  inconsistencyCount,
+  statsLoaded,
+  isAiEnabled,
+  documentType,
+  keyTakeaway,
+  onNavigate,
+}: {
+  clauses: Clause[];
+  importantCount: number;
+  obligationCount: number;
+  inconsistencyCount: number;
+  statsLoaded: boolean;
+  isAiEnabled: boolean;
+  documentType: string;
+  keyTakeaway: string;
+  onNavigate: (tab: TabId) => void;
 }) {
   const pageCount = Math.max(1, Math.ceil(clauses.reduce((acc, c) => acc + c.text.length, 0) / 2500));
   return (
     <div className="max-w-5xl mx-auto space-y-8">
-      <div>
-        <h2 className="text-3xl font-serif text-neutral-900 dark:text-white mb-2">Document Overview</h2>
-        <p className="text-neutral-600 dark:text-neutral-400">High-level insights extracted from your document by AI.</p>
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+        <div>
+          <div className="inline-block px-3 py-1 rounded-full bg-blue-50 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 text-xs font-semibold uppercase tracking-wider mb-2">
+            {documentType || "Legal Document Workspace"}
+          </div>
+          <h2 className="text-3xl font-serif text-neutral-900 dark:text-white">Document Overview</h2>
+          <p className="text-neutral-600 dark:text-neutral-400 text-sm">
+            High-level intelligence, risk distribution, and quick navigation extracted from your document.
+          </p>
+        </div>
+        <div className="flex gap-2">
+          <button
+            onClick={() => onNavigate("compare")}
+            className="px-4 py-2 text-xs font-semibold bg-blue-50 dark:bg-blue-900/20 text-blue-700 dark:text-blue-300 border border-blue-200 dark:border-blue-800 rounded-xl hover:bg-blue-100 transition-colors"
+          >
+            Compare with Another Version →
+          </button>
+        </div>
       </div>
+
       <AiBanner isAiEnabled={isAiEnabled} />
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-        <SummaryCard title="Pages" value={pageCount.toString()} subtitle="Estimated length" />
-        <SummaryCard title="Clauses" value={clauses.length.toString()} subtitle="Identified segments" />
-        <SummaryCard title="High Risk" value={statsLoaded ? importantCount.toString() : "…"} subtitle="Clauses needing attention" />
-        <SummaryCard title="Obligations" value={statsLoaded ? obligationCount.toString() : "…"} subtitle="Action items found" />
+
+      {keyTakeaway && (
+        <div className="p-6 bg-white dark:bg-neutral-950 border border-neutral-200 dark:border-neutral-800 rounded-2xl shadow-sm space-y-2">
+          <span className="text-xs font-bold text-neutral-500 uppercase tracking-widest block">
+            Executive Key Takeaway
+          </span>
+          <p className="text-lg font-serif text-neutral-900 dark:text-white leading-relaxed">
+            {keyTakeaway}
+          </p>
+        </div>
+      )}
+
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6">
+        <SummaryCard title="Estimated Pages" value={pageCount.toString()} subtitle="Reading volume" />
+        <SummaryCard title="Clauses Identified" value={clauses.length.toString()} subtitle="Parsed segments" />
+        <SummaryCard title="High Concerns" value={statsLoaded ? importantCount.toString() : "…"} subtitle="Require legal attention" />
+        <SummaryCard title="Inconsistencies" value={statsLoaded ? inconsistencyCount.toString() : "…"} subtitle="Conflicting terms detected" />
       </div>
-      <div className="bg-white dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 rounded-xl p-8 text-center space-y-4">
-        <h3 className="text-lg font-medium text-neutral-900 dark:text-white">Ready to review?</h3>
-        <p className="text-neutral-600 dark:text-neutral-400">Explore clauses in plain language or jump straight to the risk radar.</p>
-        <div className="flex justify-center gap-4 pt-4">
-          <button onClick={() => { onNavigate("explorer"); }} className="px-6 py-2 bg-neutral-900 dark:bg-white text-white dark:text-neutral-900 rounded-lg font-medium hover:bg-neutral-800 transition-colors">Open Explorer</button>
-          <button onClick={() => { onNavigate("risk"); }} className="px-6 py-2 bg-neutral-100 dark:bg-neutral-800 text-neutral-900 dark:text-white rounded-lg font-medium hover:bg-neutral-200 transition-colors">View Risk Radar</button>
+
+      {/* Feature Navigation Grid */}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4 pt-2">
+        <div
+          onClick={() => onNavigate("explorer")}
+          className="p-6 bg-white dark:bg-neutral-950 border border-neutral-200 dark:border-neutral-800 rounded-2xl hover:border-blue-400 dark:hover:border-blue-600 transition-all cursor-pointer shadow-sm space-y-2"
+        >
+          <div className="text-blue-600 dark:text-blue-400 text-sm font-bold uppercase tracking-wider">Clause Explorer</div>
+          <h4 className="text-base font-semibold text-neutral-900 dark:text-white">Plain-English Translations</h4>
+          <p className="text-xs text-neutral-500">Search and filter every clause with side-by-side plain language meanings and practical impact.</p>
+        </div>
+
+        <div
+          onClick={() => onNavigate("risk")}
+          className="p-6 bg-white dark:bg-neutral-950 border border-neutral-200 dark:border-neutral-800 rounded-2xl hover:border-amber-400 dark:hover:border-amber-600 transition-all cursor-pointer shadow-sm space-y-2"
+        >
+          <div className="text-amber-600 dark:text-amber-400 text-sm font-bold uppercase tracking-wider">Risk Radar</div>
+          <h4 className="text-base font-semibold text-neutral-900 dark:text-white">Risks & Inconsistencies</h4>
+          <p className="text-xs text-neutral-500">Prioritized concerns backed by verbatim evidence quotes, plus internal contract contradictions.</p>
+        </div>
+
+        <div
+          onClick={() => onNavigate("action")}
+          className="p-6 bg-white dark:bg-neutral-950 border border-neutral-200 dark:border-neutral-800 rounded-2xl hover:border-emerald-400 dark:hover:border-emerald-600 transition-all cursor-pointer shadow-sm space-y-2"
+        >
+          <div className="text-emerald-600 dark:text-emerald-400 text-sm font-bold uppercase tracking-wider">Action Kit</div>
+          <h4 className="text-base font-semibold text-neutral-900 dark:text-white">Checklists & Options</h4>
+          <p className="text-xs text-neutral-500">Pre-signing checklist, negotiation redlines, operational safeguards, and exportable dossier.</p>
         </div>
       </div>
     </div>
@@ -139,16 +207,45 @@ function useProviderDetection(): [AnalysisProvider, boolean] {
   return [provider, isAiEnabled];
 }
 
-function useOverviewStats(clauses: Clause[], provider: AnalysisProvider): { importantCount: number; obligationCount: number; statsLoaded: boolean } {
+function useOverviewStats(
+  clauses: Clause[],
+  provider: AnalysisProvider
+): {
+  importantCount: number;
+  obligationCount: number;
+  inconsistencyCount: number;
+  documentType: string;
+  keyTakeaway: string;
+  statsLoaded: boolean;
+} {
   const [importantCount, setImportantCount] = useState(0);
   const [obligationCount, setObligationCount] = useState(0);
+  const [inconsistencyCount, setInconsistencyCount] = useState(0);
+  const [documentType, setDocumentType] = useState("");
+  const [keyTakeaway, setKeyTakeaway] = useState("");
   const [statsLoaded, setStatsLoaded] = useState(false);
+
   useEffect(() => {
     if (clauses.length === 0) return;
-    void Promise.all(clauses.map((c) => provider.assessRisk(c))).then((assessments) => { setImportantCount(assessments.filter((a) => a?.level === "High").length); });
-    void provider.generateActionKit(clauses).then((kit) => { setObligationCount(kit.obligations.length); setStatsLoaded(true); }).catch(() => { setStatsLoaded(true); });
+    void Promise.all(clauses.map((c) => provider.assessRisk(c))).then((assessments) => {
+      setImportantCount(assessments.filter((a) => a?.level === "High").length);
+    });
+
+    void provider
+      .generateActionKit(clauses)
+      .then((kit) => {
+        setObligationCount(kit.obligations.length);
+        setInconsistencyCount(kit.inconsistencies?.length ?? 0);
+        setDocumentType(kit.metadata?.docType ?? "Legal Contract");
+        setKeyTakeaway(kit.metadata?.keyTakeaway ?? kit.summary);
+        setStatsLoaded(true);
+      })
+      .catch(() => {
+        setStatsLoaded(true);
+      });
   }, [clauses, provider]);
-  return { importantCount, obligationCount, statsLoaded };
+
+  return { importantCount, obligationCount, inconsistencyCount, documentType, keyTakeaway, statsLoaded };
 }
 
 export default function DashboardPage() {
@@ -157,9 +254,20 @@ export default function DashboardPage() {
   const [activeTab, setActiveTab] = useState<TabId>("overview");
   const tabListRef = useRef<HTMLDivElement>(null);
   const [provider, isAiEnabled] = useProviderDetection();
-  const { importantCount, obligationCount, statsLoaded } = useOverviewStats(clauses, provider);
+  const {
+    importantCount,
+    obligationCount,
+    inconsistencyCount,
+    documentType,
+    keyTakeaway,
+    statsLoaded,
+  } = useOverviewStats(clauses, provider);
 
-  useEffect(() => { if (!documentName) { router.push("/"); } }, [documentName, router]);
+  useEffect(() => {
+    if (!documentName) {
+      router.push("/");
+    }
+  }, [documentName, router]);
 
   const handleTabKeyDown = (e: React.KeyboardEvent, currentIdx: number) => {
     let nextIdx = currentIdx;
@@ -170,21 +278,49 @@ export default function DashboardPage() {
     else return;
     e.preventDefault();
     const nextTab = tabs[nextIdx];
-    if (nextTab) { setActiveTab(nextTab.id); const el = tabListRef.current?.querySelector<HTMLButtonElement>(`[data-tab="${nextTab.id}"]`); el?.focus(); }
+    if (nextTab) {
+      setActiveTab(nextTab.id);
+      const el = tabListRef.current?.querySelector<HTMLButtonElement>(`[data-tab="${nextTab.id}"]`);
+      el?.focus();
+    }
   };
 
-  const navigateTo = (id: string) => { setActiveTab("explorer"); window.location.hash = `#clause-${id}`; };
+  const navigateTo = (id: string) => {
+    setActiveTab("explorer");
+    window.location.hash = `#clause-${id}`;
+  };
 
   if (!documentName) return null;
 
   return (
     <div className="flex flex-col h-screen bg-neutral-50 dark:bg-neutral-900 overflow-hidden">
-      <a href="#dashboard-main" className="sr-only focus:not-sr-only focus:absolute focus:top-4 focus:left-4 focus:z-50 focus:px-4 focus:py-2 focus:bg-neutral-900 focus:text-white focus:rounded-lg focus:shadow-lg">Skip to main content</a>
+      <a
+        href="#dashboard-main"
+        className="sr-only focus:not-sr-only focus:absolute focus:top-4 focus:left-4 focus:z-50 focus:px-4 focus:py-2 focus:bg-neutral-900 focus:text-white focus:rounded-lg focus:shadow-lg"
+      >
+        Skip to main content
+      </a>
       <DashboardHeader documentName={documentName} isDemoMode={isDemoMode} isAiEnabled={isAiEnabled} />
       <TabBar activeTab={activeTab} tabListRef={tabListRef} onSelect={setActiveTab} onKeyDown={handleTabKeyDown} />
       <main id="dashboard-main" className="flex-1 overflow-hidden relative">
-        <div role="tabpanel" id="panel-overview" aria-labelledby="tab-overview" hidden={activeTab !== "overview"} className="h-full overflow-y-auto p-8">
-          <OverviewPanel clauses={clauses} importantCount={importantCount} obligationCount={obligationCount} statsLoaded={statsLoaded} isAiEnabled={isAiEnabled} onNavigate={setActiveTab} />
+        <div
+          role="tabpanel"
+          id="panel-overview"
+          aria-labelledby="tab-overview"
+          hidden={activeTab !== "overview"}
+          className="h-full overflow-y-auto p-6 md:p-8"
+        >
+          <OverviewPanel
+            clauses={clauses}
+            importantCount={importantCount}
+            obligationCount={obligationCount}
+            inconsistencyCount={inconsistencyCount}
+            statsLoaded={statsLoaded}
+            isAiEnabled={isAiEnabled}
+            documentType={documentType}
+            keyTakeaway={keyTakeaway}
+            onNavigate={setActiveTab}
+          />
         </div>
         <div role="tabpanel" id="panel-explorer" aria-labelledby="tab-explorer" hidden={activeTab !== "explorer"} className="h-full">
           {activeTab === "explorer" && <ClauseExplorer clauses={clauses} provider={provider} />}
@@ -196,7 +332,7 @@ export default function DashboardPage() {
           {activeTab === "ask" && <AskDocument clauses={clauses} provider={provider} onNavigateToClause={navigateTo} />}
         </div>
         <div role="tabpanel" id="panel-compare" aria-labelledby="tab-compare" hidden={activeTab !== "compare"} className="h-full">
-          {activeTab === "compare" && <CompareView clauses={clauses} />}
+          {activeTab === "compare" && <CompareView clauses={clauses} provider={provider} documentName={documentName} />}
         </div>
         <div role="tabpanel" id="panel-action" aria-labelledby="tab-action" hidden={activeTab !== "action"} className="h-full">
           {activeTab === "action" && <ActionKitView clauses={clauses} provider={provider} />}

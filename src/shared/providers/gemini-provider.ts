@@ -1,9 +1,17 @@
-import type { AnalysisProvider, Explanation, RiskAssessment, QAResponse, ActionKit } from "./analysis-provider";
+import type {
+  AnalysisProvider,
+  Explanation,
+  RiskAssessment,
+  QAResponse,
+  ActionKit,
+  ComparisonResult,
+  InconsistencyItem,
+} from "./analysis-provider";
 import type { Clause } from "@/features/clauses";
 
 /**
  * GeminiProvider — calls the server-side /api/analyze route handler,
- * which in turn calls Gemini 2.0 Flash. The API key is never in the client bundle.
+ * which executes OpenAI GPT-4o Mini server-side. The API key is never in the client bundle.
  */
 export class GeminiProvider implements AnalysisProvider {
   private cache = new Map<string, unknown>();
@@ -24,24 +32,33 @@ export class GeminiProvider implements AnalysisProvider {
   }
 
   async explainClause(clause: Clause): Promise<Explanation> {
-    const data = await this.call<{ plainLanguage: string }>({
+    const data = await this.call<Explanation>({
       op: "explain",
       clauseText: clause.text,
     });
-    return { plainLanguage: data.plainLanguage };
+    return {
+      plainLanguage: data.plainLanguage,
+      whyItMatters: data.whyItMatters,
+      category: data.category,
+      lawyerQuestion: data.lawyerQuestion,
+    };
   }
 
   async assessRisk(clause: Clause): Promise<RiskAssessment | null> {
-    const data = await this.call<{ level: string | null; reason: string | null }>({
+    const data = await this.call<{ level: string | null; reason: string | null; evidenceQuote?: string }>({
       op: "risk",
       clauseText: clause.text,
     });
     if (!data.level || !data.reason) return null;
-    return { level: data.level as RiskAssessment["level"], reason: data.reason };
+    return {
+      level: data.level as RiskAssessment["level"],
+      reason: data.reason,
+      evidenceQuote: data.evidenceQuote,
+    };
   }
 
   async askQuestion(clauses: Clause[], question: string): Promise<QAResponse> {
-    const data = await this.call<{ answer: string | null; citationClauseId: string | null; isLegalAdvice: boolean }>({
+    const data = await this.call<QAResponse>({
       op: "ask",
       clauses: clauses.map((c) => ({ id: c.id, text: c.text })),
       question,
@@ -56,4 +73,29 @@ export class GeminiProvider implements AnalysisProvider {
     });
     return data;
   }
+
+  async compareDocuments(
+    docAClauses: Clause[],
+    docBClauses: Clause[],
+    docAName = "Document A",
+    docBName = "Document B"
+  ): Promise<ComparisonResult> {
+    const data = await this.call<ComparisonResult>({
+      op: "compare",
+      docAClauses: docAClauses.map((c) => ({ id: c.id, text: c.text })),
+      docBClauses: docBClauses.map((c) => ({ id: c.id, text: c.text })),
+      docAName,
+      docBName,
+    });
+    return data;
+  }
+
+  async detectInconsistencies(clauses: Clause[]): Promise<InconsistencyItem[]> {
+    const data = await this.call<{ inconsistencies: InconsistencyItem[] }>({
+      op: "inconsistencies",
+      clauses: clauses.map((c) => ({ id: c.id, text: c.text })),
+    });
+    return data.inconsistencies ?? [];
+  }
 }
+
