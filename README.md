@@ -2,7 +2,7 @@
 
 > **"Clause explains documents. It never gives legal advice."**
 
-Clause is a **Generative AI-powered legal document workspace** built with **Google Gemini 2.0 Flash**. It helps non-lawyers understand, risk-assess, and act on legal documents — rental agreements, employment contracts, loan documents, NDAs, insurance policies, and more — before they sign.
+Clause is a **Generative AI-powered legal document workspace** built with **OpenAI GPT-4o Mini**. It helps non-lawyers understand, risk-assess, and act on legal documents — rental agreements, employment contracts, loan documents, NDAs, insurance policies, and more — before they sign.
 
 Every answer is grounded strictly in the uploaded document. If Clause cannot find the answer in the document, it says so. If a question crosses into legal advice territory, Clause detects this via AI and redirects the user to consult a lawyer.
 
@@ -10,7 +10,7 @@ Every answer is grounded strictly in the uploaded document. If Clause cannot fin
 
 ## 🤖 Generative AI Integration
 
-**Clause uses Google Gemini 2.0 Flash (`gemini-2.0-flash`)** for all intelligent features via the `@google/genai` SDK. All AI calls are server-side only (in `/src/app/api/analyze/route.ts`) — the API key is never exposed to the browser.
+**Clause uses OpenAI GPT-4o Mini** for all intelligent features via the `openai` SDK. All AI calls are server-side only (in `/src/app/api/analyze/route.ts`) — the API key is never exposed to the browser.
 
 ### Where Gemini AI is used
 
@@ -27,13 +27,13 @@ Every answer is grounded strictly in the uploaded document. If Clause cannot fin
 ```
 Browser (Client)
     │
-    ├── GeminiProvider.ts ──► POST /api/analyze  ──► Google Gemini 2.0 Flash
+    ├── GeminiProvider.ts ──► POST /api/analyze  ──► OpenAI GPT-4o Mini
     │       ↑ switches to                              (server-side only)
     │       │ on startup probe
     └── LocalProvider.ts  (fallback when no API key)
 ```
 
-The app probes `/api/analyze` on startup. If the server returns HTTP 200 (API key valid), the UI automatically switches from `LocalProvider` (rule-based fallback) to `GeminiProvider` (real Gemini AI). A green **"AI Enhanced"** badge appears in the header confirming Gemini is active.
+The app probes `/api/analyze` on startup. If the server returns HTTP 200 (API key valid), the UI automatically switches from `LocalProvider` (rule-based fallback) to `GeminiProvider` (real OpenAI AI). A green **"GPT-4o Mini"** badge appears in the header confirming AI is active.
 
 ---
 
@@ -65,12 +65,12 @@ Open [http://localhost:3000](http://localhost:3000).
 
 Without an API key the app uses `LocalProvider` (a rule-based fallback). To enable **real Gemini 2.0 Flash AI**:
 
-1. Get a **free** API key at [https://aistudio.google.com/apikey](https://aistudio.google.com/apikey)
+1. Get an OpenAI API key at [https://platform.openai.com/api-keys](https://platform.openai.com/api-keys)
 2. Create `.env.local` in the project root:
    ```bash
-   GOOGLE_AI_API_KEY=AIzaSy_YOUR_KEY_HERE
+   OPENAI_API_KEY=sk-YOUR_KEY_HERE
    ```
-3. Restart the dev server — the header will show a green **"AI Enhanced"** badge
+3. Restart the dev server — the header will show a green **"GPT-4o Mini"** badge
 
 The API key is **server-side only** — it is read exclusively in `src/app/api/analyze/route.ts` and never bundled into the client JavaScript.
 
@@ -82,7 +82,7 @@ The API key is **server-side only** — it is read exclusively in `src/app/api/a
 |---|---|
 | Framework | Next.js 16 (App Router, Turbopack) |
 | Language | TypeScript (strict) |
-| **AI / GenAI** | **Google Gemini 2.0 Flash via `@google/genai` SDK** |
+| **AI / GenAI** | **OpenAI GPT-4o Mini via `openai` SDK** |
 | Styling | Tailwind CSS + custom design tokens |
 | Accessibility | WCAG 2.2 AA — `jsx-a11y` strict ruleset |
 | Security | CSP, server-only API key, `eslint-plugin-security` |

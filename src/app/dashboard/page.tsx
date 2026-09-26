@@ -37,11 +37,11 @@ function SummaryCard({ title, value, subtitle }: { title: string; value: string;
 function AiBanner({ isAiEnabled }: { isAiEnabled: boolean }) {
   if (isAiEnabled) {
     return (
-      <div className="flex items-center gap-3 px-5 py-4 bg-emerald-50 dark:bg-emerald-900/10 border border-emerald-200 dark:border-emerald-800/50 rounded-xl" role="status" aria-label="AI status: Gemini AI active">
+      <div className="flex items-center gap-3 px-5 py-4 bg-emerald-50 dark:bg-emerald-900/10 border border-emerald-200 dark:border-emerald-800/50 rounded-xl" role="status" aria-label="AI status: OpenAI GPT-4o Mini active">
         <span className="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-pulse flex-shrink-0" aria-hidden="true" />
         <div>
-          <p className="text-sm font-semibold text-emerald-800 dark:text-emerald-300">Gemini 2.0 Flash — Active</p>
-          <p className="text-xs text-emerald-600 dark:text-emerald-400">All analysis powered by Google Gemini AI. Answers grounded in your document only.</p>
+          <p className="text-sm font-semibold text-emerald-800 dark:text-emerald-300">GPT-4o Mini — Active</p>
+          <p className="text-xs text-emerald-600 dark:text-emerald-400">All analysis powered by OpenAI GPT-4o Mini. Answers grounded strictly in your document.</p>
         </div>
       </div>
     );
@@ -50,8 +50,8 @@ function AiBanner({ isAiEnabled }: { isAiEnabled: boolean }) {
     <div className="flex items-center gap-3 px-5 py-4 bg-amber-50 dark:bg-amber-900/10 border border-amber-200 dark:border-amber-800/50 rounded-xl" role="status" aria-label="AI status: running in offline mode">
       <span className="w-2.5 h-2.5 rounded-full bg-amber-400 flex-shrink-0" aria-hidden="true" />
       <div>
-        <p className="text-sm font-semibold text-amber-800 dark:text-amber-300">Offline Mode — Add Gemini API Key to Enable AI</p>
-        <p className="text-xs text-amber-600 dark:text-amber-400">Set <code className="font-mono bg-amber-100 dark:bg-amber-900/40 px-1 rounded">GOOGLE_AI_API_KEY</code> in <code className="font-mono bg-amber-100 dark:bg-amber-900/40 px-1 rounded">.env.local</code> and restart — free key at aistudio.google.com/apikey</p>
+        <p className="text-sm font-semibold text-amber-800 dark:text-amber-300">Offline Mode — Add OpenAI API Key to Enable AI</p>
+        <p className="text-xs text-amber-600 dark:text-amber-400">Set <code className="font-mono bg-amber-100 dark:bg-amber-900/40 px-1 rounded">OPENAI_API_KEY</code> in <code className="font-mono bg-amber-100 dark:bg-amber-900/40 px-1 rounded">.env.local</code> and restart</p>
       </div>
     </div>
   );
@@ -99,12 +99,12 @@ function DashboardHeader({ documentName, isDemoMode, isAiEnabled }: { documentNa
       </div>
       <div className="flex items-center gap-3">
         {isAiEnabled ? (
-          <div className="flex items-center gap-2 px-3 py-1.5 bg-emerald-50 dark:bg-emerald-900/20 text-emerald-700 dark:text-emerald-400 text-xs font-semibold rounded-full border border-emerald-200 dark:border-emerald-800/50" aria-label="Powered by Gemini 2.0 Flash">
+          <div className="flex items-center gap-2 px-3 py-1.5 bg-emerald-50 dark:bg-emerald-900/20 text-emerald-700 dark:text-emerald-400 text-xs font-semibold rounded-full border border-emerald-200 dark:border-emerald-800/50" aria-label="Powered by OpenAI GPT-4o Mini">
             <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" aria-hidden="true" />
-            Gemini 2.0 Flash
+            GPT-4o Mini
           </div>
         ) : (
-          <div className="flex items-center gap-2 px-3 py-1.5 bg-neutral-100 dark:bg-neutral-800 text-neutral-500 text-xs rounded-full border border-neutral-200 dark:border-neutral-700" aria-label="Offline mode — no Gemini key">
+          <div className="flex items-center gap-2 px-3 py-1.5 bg-neutral-100 dark:bg-neutral-800 text-neutral-500 text-xs rounded-full border border-neutral-200 dark:border-neutral-700" aria-label="Offline mode — add OpenAI key">
             <span className="w-1.5 h-1.5 rounded-full bg-neutral-400" aria-hidden="true" />
             Offline Mode
           </div>

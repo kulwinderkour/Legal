@@ -1,4 +1,4 @@
-import { GoogleGenAI } from "@google/genai";
+import OpenAI from "openai";
 
 type AnalyzeOperation =
   | { op: "explain"; clauseText: string }
@@ -22,49 +22,78 @@ function isLegalAdviceQuestion(q: string): boolean {
   return LEGAL_ADVICE_PATTERNS.some((p) => lower.includes(p));
 }
 
-function getAi(): GoogleGenAI | null {
-  const apiKey = process.env.GOOGLE_AI_API_KEY;
+function getAi(): OpenAI | null {
+  const apiKey = process.env.OPENAI_API_KEY;
   if (!apiKey) return null;
-  return new GoogleGenAI({ apiKey });
+  return new OpenAI({ apiKey });
 }
 
-async function handleExplain(ai: GoogleGenAI, clauseText: string): Promise<Response> {
-  const prompt = `You are a plain-language legal assistant. Explain the following contract clause in simple, clear language that a non-lawyer can understand in 2-3 sentences. Do not give legal advice. Only explain what the clause says.\n\nCLAUSE:\n${clauseText}\n\nRespond with ONLY the plain-language explanation, no preamble.`;
-  const response = await ai.models.generateContent({ model: "gemini-2.0-flash", contents: prompt });
-  const text = response.text ?? "This clause defines specific terms of the agreement.";
+const MODEL = "gpt-4o-mini";
+
+async function handleExplain(ai: OpenAI, clauseText: string): Promise<Response> {
+  const completion = await ai.chat.completions.create({
+    model: MODEL,
+    messages: [
+      { role: "system", content: "You are a plain-language legal assistant. Explain contract clauses simply for non-lawyers. Never give legal advice. Only explain what the clause says." },
+      { role: "user", content: `Explain this clause in 2-3 clear sentences:\n\n${clauseText}` },
+    ],
+    max_tokens: 200,
+  });
+  const text = completion.choices[0]?.message?.content ?? "This clause defines specific terms of the agreement.";
   return Response.json({ plainLanguage: text.trim() });
 }
 
-async function handleRisk(ai: GoogleGenAI, clauseText: string): Promise<Response> {
-  const prompt = `You are a legal document analyst. Assess the risk level of the following contract clause for a typical person signing it.\n\nCLAUSE:\n${clauseText}\n\nRespond with ONLY valid JSON in this exact format (no markdown):\n{"level": "High" or "Medium" or "Low" or null, "reason": "Brief 1-2 sentence explanation, or null if no risk"}`;
-  const response = await ai.models.generateContent({ model: "gemini-2.0-flash", contents: prompt, config: { responseMimeType: "application/json" } });
-  const raw = response.text ?? '{"level":null,"reason":null}';
+async function handleRisk(ai: OpenAI, clauseText: string): Promise<Response> {
+  const completion = await ai.chat.completions.create({
+    model: MODEL,
+    messages: [
+      { role: "system", content: "You are a legal document analyst. Assess clause risk for a typical person signing it. Respond ONLY with valid JSON: {\"level\": \"High\" or \"Medium\" or \"Low\" or null, \"reason\": \"1-2 sentence explanation or null\"}" },
+      { role: "user", content: `Assess the risk of this clause:\n\n${clauseText}` },
+    ],
+    response_format: { type: "json_object" },
+    max_tokens: 150,
+  });
+  const raw = completion.choices[0]?.message?.content ?? '{"level":null,"reason":null}';
   return Response.json(JSON.parse(raw));
 }
 
-async function handleAsk(ai: GoogleGenAI, clauses: { id: string; text: string }[], question: string): Promise<Response> {
+async function handleAsk(ai: OpenAI, clauses: { id: string; text: string }[], question: string): Promise<Response> {
   if (isLegalAdviceQuestion(question)) {
     return Response.json({ answer: null, citationClauseId: null, isLegalAdvice: true });
   }
   const context = clauses.map((c, i) => `[CLAUSE ${String(i + 1)} | ID: ${c.id}]\n${c.text}`).join("\n\n---\n\n");
-  const prompt = `You are a legal document assistant. Answer the user's question using ONLY the information in the provided document clauses. Do not speculate or bring in outside knowledge.\n\nDOCUMENT CLAUSES:\n${context}\n\nUSER QUESTION: ${question}\n\nRespond with ONLY valid JSON (no markdown):\n{"answer": "your answer here or null if not found in the document", "citationClauseId": "the clause ID from above that supports your answer, or null"}`;
-  const response = await ai.models.generateContent({ model: "gemini-2.0-flash", contents: prompt, config: { responseMimeType: "application/json" } });
-  const raw = response.text ?? '{"answer":null,"citationClauseId":null}';
+  const completion = await ai.chat.completions.create({
+    model: MODEL,
+    messages: [
+      { role: "system", content: "Answer questions using ONLY the provided document clauses. Do not speculate. Respond ONLY with valid JSON: {\"answer\": \"your answer or null if not found\", \"citationClauseId\": \"the clause ID or null\"}" },
+      { role: "user", content: `DOCUMENT CLAUSES:\n${context}\n\nQUESTION: ${question}` },
+    ],
+    response_format: { type: "json_object" },
+    max_tokens: 300,
+  });
+  const raw = completion.choices[0]?.message?.content ?? '{"answer":null,"citationClauseId":null}';
   return Response.json({ ...JSON.parse(raw), isLegalAdvice: false });
 }
 
-async function handleActionKit(ai: GoogleGenAI, clauses: { id: string; text: string }[]): Promise<Response> {
+async function handleActionKit(ai: OpenAI, clauses: { id: string; text: string }[]): Promise<Response> {
   const context = clauses.map((c, i) => `[CLAUSE ${String(i + 1)}]\n${c.text}`).join("\n\n---\n\n");
-  const prompt = `You are a legal document analyst helping a non-lawyer understand a contract. Analyze these clauses and produce an action kit.\n\nDOCUMENT CLAUSES:\n${context}\n\nRespond with ONLY valid JSON (no markdown):\n{"summary":"2-3 sentence plain-language summary","obligations":["key things the signing party must do"],"importantClauses":["clause topics to pay special attention to"],"lawyerQuestions":["3-5 specific questions to ask a lawyer"]}`;
-  const response = await ai.models.generateContent({ model: "gemini-2.0-flash", contents: prompt, config: { responseMimeType: "application/json" } });
-  const raw = response.text ?? "{}";
+  const completion = await ai.chat.completions.create({
+    model: MODEL,
+    messages: [
+      { role: "system", content: "You are a legal document analyst helping non-lawyers understand contracts. Respond ONLY with valid JSON: {\"summary\":\"2-3 sentence plain summary\",\"obligations\":[\"key obligations\"],\"importantClauses\":[\"clause topics to review\"],\"lawyerQuestions\":[\"3-5 questions to ask a lawyer\"]}" },
+      { role: "user", content: `Analyze these clauses and produce an action kit:\n\n${context}` },
+    ],
+    response_format: { type: "json_object" },
+    max_tokens: 500,
+  });
+  const raw = completion.choices[0]?.message?.content ?? "{}";
   return Response.json(JSON.parse(raw));
 }
 
 export async function POST(request: Request): Promise<Response> {
   const ai = getAi();
   if (!ai) {
-    return Response.json({ error: "GOOGLE_AI_API_KEY not set" }, { status: 503 });
+    return Response.json({ error: "OPENAI_API_KEY not set" }, { status: 503 });
   }
 
   let body: AnalyzeOperation;
